@@ -1,0 +1,1 @@
+no usare glew porque me genera problemas, usare galogen, por lo que incluyo gl.c y gl.h
