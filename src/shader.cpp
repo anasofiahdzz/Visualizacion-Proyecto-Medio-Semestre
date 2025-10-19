@@ -1,8 +1,8 @@
-// shader.cpp
 #include "../header/shader.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 
@@ -10,12 +10,11 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     std::string vertexShaderCode = leerArchivoShader(vertexPath);
     std::string fragmentShaderCode = leerArchivoShader(fragmentPath);
 
-
     if (vertexShaderCode.empty() || fragmentShaderCode.empty()) {
         std::cerr << "Error al cargar los shaders" << std::endl;
     }
 
-        // Convertir los strings a const char*
+    // Convertir los strings a const char*
     const char* vShaderCode = vertexShaderCode.c_str();
     const char* fShaderCode = fragmentShaderCode.c_str();
 
@@ -26,7 +25,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
 
-        // Check for shader compile errors
+    // Check for shader compile errors
     GLint success;
     GLchar infoLog[512];
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
@@ -82,6 +81,11 @@ void Shader::setFloat(const std::string &name, float value) const {
 
 void Shader::setMat4x4(const std::string &name,  const glm::mat4 &value) const{
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+// Enviar un vec3
+void Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
+    glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
 }
 
 void Shader::terminate(){

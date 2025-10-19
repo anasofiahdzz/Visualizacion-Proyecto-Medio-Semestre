@@ -10,37 +10,38 @@
 #include <string>
 #include <vector>
 #include "model.h"
+#include "shader.h"
 
 class Ventana{
     public:
+
+        GLuint axesVAO, axesVBO;
+        Shader* axesShader; 
+
         GLuint width, height;
         GLFWwindow* window;
         glm::mat4 view, projection;
 
         Model *model;
-        //nuevo
+
         std::vector<std::string> objFileNames;
         size_t currentFileIndex;
 
+        void initAxes(); // Declaración del método
+        void drawAxes(); // Declaración del método
+
         Ventana();
         Ventana(GLuint w, GLuint h);
-        //Ventana(unsigned int w, unsigned int h);
-        //anteriorres
+
+        void loadOBJFiles(const std::vector<std::string>& files);
         void initGLFW();
-        //void initGLEW();
         void initModels(Model* m);
-        
         void initViewProyection();
         void render();
         void update();
         void idel();
         void display();
         void finish();
-
-        // Nuevo método
-        void loadOBJFiles(const std::vector<std::string>& files);
-
-
 };
 
 #endif

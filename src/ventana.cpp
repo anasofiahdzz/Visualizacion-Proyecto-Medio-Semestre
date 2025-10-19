@@ -11,9 +11,12 @@ Ventana::Ventana(GLuint w, GLuint h){
     height = h;
 }
 
+// para declarar extern la función de inicialización de GALOGEN 
+int gl_init();
+
 void Ventana::initGLFW()
 {
-        if (!glfwInit()) {
+    if (!glfwInit()) {
         std::cerr << "Error al inicializar GLFW" << std::endl;
         return ;
     }
@@ -23,7 +26,7 @@ void Ventana::initGLFW()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(width, height, "Cubo Rotando", nullptr, nullptr);
+    window = glfwCreateWindow(width, height, "Vizualizador", nullptr, nullptr);
     if (!window) {
         std::cerr << "Error al crear la ventana" << std::endl;
         glfwTerminate();
@@ -32,11 +35,21 @@ void Ventana::initGLFW()
 
     glfwMakeContextCurrent(window);
 
+    // inicializacion de galogen
+    if (!gl_init()) { // desde la fun gl_init()
+        std::cerr << "Error al inicializar GALOGEN (OpenGL Function Loader)" << std::endl;
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return;
+    }
 
+    // configuarando opengl
+    glEnable(GL_DEPTH_TEST);  // Prueba de profundidad (requerido para 3D)
+    glEnable(GL_CULL_FACE);   // Habilitar culling de caras
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 }
 
-//nuevo
-// ✅ Debe llevar el nombre de la clase:
 void Ventana::loadOBJFiles(const std::vector<std::string>& files) {
     if (files.empty()) {
         std::cerr << "Error: No se proporcionaron archivos OBJ para cargar." << std::endl;
@@ -46,85 +59,132 @@ void Ventana::loadOBJFiles(const std::vector<std::string>& files) {
     this->objFileNames = files; // Almacena todos los nombres de archivo
     this->currentFileIndex = 0; // Empieza en el primer archivo
             
-            // Aquí es donde se crea el primer modelo.
-            // Asumimos que la clase Model tiene un constructor o método 'Load' que toma el nombre del archivo.
-            // Si 'model' es un miembro de Ventana, debes crearlo aquí.
+    // se crea el primer modelo.
+    // se carga el primer modelo:
 
-            // Creación y carga del primer modelo:
-            // **NOTA: Necesitas que 'model' sea un miembro de Ventana (como en tu .h) y que Model tenga un método Load**
     this->model = new Model(); // Crea la instancia del modelo
             
-            // Llama a la lógica de Model para cargar el primer archivo
+    // Llama a la lógica de Model para cargar el primer archivo
     if (!this->model->Load(this->objFileNames[this->currentFileIndex])) { 
     std::cerr << "Error al cargar el archivo: " << this->objFileNames[this->currentFileIndex] << std::endl;
-                // Manejar error (tal vez terminar el programa o pasar al siguiente)
+    // Manejar error (tal vez terminar el programa o pasar al siguiente)
     }
 }
-
-
-    // Inicializar GLEW
-/*void Ventana::initGLEW(){
-    if (glewInit() != GLEW_OK) {
-        std::cerr << "Error al inicializar GLEW" << std::endl;
-        return;
-    }
-    std::cout << "Inicialización Correcta de GLEW y GLFW" << std::endl;
-    // Habilitar depth testing y face culling
-    glEnable(GL_DEPTH_TEST);  // Prueba de profundidad
-    glEnable(GL_CULL_FACE);   // Habilitar culling de caras
-    glCullFace(GL_BACK);      // Culling de caras traseras
-    glFrontFace(GL_CCW);      // Las caras frontales son las que tienen vértices en sentido antihorario
-
-}*/
 
 void Ventana::initModels(Model* m)
 {
     model = m;
     model->initModel();
-   
 }
+
 void Ventana::initViewProyection(){
      // Configurar matrices de transformación (model, view, projection)
-    //view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-    view = glm::lookAt(glm::vec3(3.0f,3.0f,3.0f), glm::vec3(0.0f,0.0f,0.0f), glm::vec3(0.0f,1.0f,0.0f));
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    view = glm::lookAt(
+        glm::vec3(0.0f, 0.0f, 5.0f),  // posición de la cámara
+        glm::vec3(0.0f, 0.0f, 0.0f),  // hacia dónde mira
+        glm::vec3(0.0f, 1.0f, 0.0f)   // vector "arriba"
+    );
 
+    projection = glm::perspective(
+        glm::radians(45.0f),
+        (float)width / (float)height,
+        0.1f,
+        100.0f
+    );
 }
 
-void Ventana::render(){
-while (!glfwWindowShouldClose(window)) {
-        
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
-
-        glClearColor(1.0,0.0,1.0,0.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        model->renderModel(view, projection);
-
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-        update();
-    }
-
-
-}
 void Ventana::update(){
  // Calcular la rotación del cubo
     model->updateModel(glfwGetTime());
 }
 void Ventana::idel(){}
 
-void Ventana::display() {
-    // ...
-}
-void Ventana::finish(){
+void Ventana::display() {}
 
-    //model->finish();
-    if (model) {
-        delete model;
-        model = nullptr;
+// src/ventana.cpp (Definición global o como const en el .cpp)
+float axis_vertices[] = {
+    // Posición X, Y, Z, R, G, B
+    0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f, // Eje X (Rojo)
+    2.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+
+    0.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f, // Eje Y (Verde)
+    0.0f, 2.0f, 0.0f,   0.0f, 1.0f, 0.0f,
+
+    0.0f, 0.0f, 0.0f,   0.0f, 0.0f, 1.0f, // Eje Z (Azul)
+    0.0f, 0.0f, 2.0f,   0.0f, 0.0f, 1.0f
+};
+
+// src/ventana.cpp
+void Ventana::initAxes() {
+    // shader simple solo usa Posición y Color para los ejes.
+    axesShader = new Shader("./shader/model.vert", "./shader/model.frag");
+    
+    glGenVertexArrays(1, &axesVAO);
+    glGenBuffers(1, &axesVBO);
+
+    glBindVertexArray(axesVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, axesVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(axis_vertices), axis_vertices, GL_STATIC_DRAW);
+
+    // Atributo 0: Posición (3 floats)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Atributo 3: Color (3 floats)
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
+void Ventana::drawAxes() {
+    if (this->axesShader && this->axesVAO) {
+        this->axesShader->use();
+        
+        // Enviar matrices de cámara (View y Projection)
+        this->axesShader->setMat4x4("view", view);
+        this->axesShader->setMat4x4("projection", projection);
+        
+        // Matriz Model para los ejes es identidad (no rotan)
+        glm::mat4 identity = glm::mat4(1.0f);
+        this->axesShader->setMat4x4("model", identity);
+
+        // Envía y_min = y_max = 0.0f para indicarle al shader que dibuje los ejes (color fijo)
+        this->axesShader->setFloat("y_min", 0.0f); 
+        this->axesShader->setFloat("y_max", 0.0f);
+        
+        glBindVertexArray(this->axesVAO);
+        glLineWidth(2.0f); 
+        glDrawArrays(GL_LINES, 0, 6); // 6 vértices = 3 líneas
+        glBindVertexArray(0);
     }
-    glfwTerminate();
+}
+
+void Ventana::render() {
+    // llamar a update() antes de dibujar si se quiere una rotación continua
+    
+    while (!glfwWindowShouldClose(window)) {
+        update(); // Llama a la rotación del modelo
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Fondo oscuro
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // dubujar modelo obj
+        if (model) { 
+            if (!model->shader) {
+                std::cerr << "Error: El modelo no tiene shader inicializado.\n";
+                break; //return;
+            }
+
+            // Configurar color del objeto antes de dibujarlo
+            model->shader->use();
+            model->shader->setVec3("objectColor", glm::vec3(1.0f, 0.8f, 0.7f)); // Rosado claro
+
+            model->renderModel(view, projection); // model->draw() llama a renderModel internamente
+        } else {
+            std::cerr << "Advertencia: modelo no cargado.\n";
+        }
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
 }
