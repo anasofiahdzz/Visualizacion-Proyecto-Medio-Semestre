@@ -41,7 +41,7 @@ void init(const std::vector<std::string> obj_files){
 int main() {
     //alamcena los nombres de los archivos obj
     std::vector<std::string> obj_files{
-        "obj/bunny.obj"
+        "obj/dragon.obj"
     };
 
     // Llama a la nueva función init con la lista de archivos

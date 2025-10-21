@@ -21,7 +21,27 @@ void Model::initModel()
 {
     modelmat = glm::mat4(1.0f);
     modelmat = glm::translate(modelmat, glm::vec3(0.0f, -1.0f, 0.0f));
-    modelmat = glm::scale(modelmat, glm::vec3(0.5f)); // reduce tamaño
+
+    //glm::mat4 baseModelmat; // matriz con traslación + escala inicial
+
+
+    // Ajustes por nombre de archivo (escala/posición)
+    if (nombreModelo.find("Happy_Buddha") != std::string::npos)
+        modelmat = glm::scale(modelmat, glm::vec3(100.0f));
+    else if (nombreModelo.find("obj/dragon.obj") != std::string::npos)
+        modelmat = glm::scale(modelmat, glm::vec3(15.0f));
+    else if (nombreModelo.find("Cube_Triangles") != std::string::npos)
+        modelmat = glm::scale(modelmat, glm::vec3(5.0f));
+    else 
+        modelmat = glm::scale(modelmat, glm::vec3(0.5f)); // reduce tamaño
+
+    // Guardar la matriz final en el miembro de la clase para usar en renderModel()
+    
+    //this->modelmat = modelmat;
+
+    // Guardar la matriz base y la inicial para render
+    baseModelmat = modelmat;
+    
 
     shader = new Shader("./shader/model.vert", "./shader/model.frag");
     shader->use();
@@ -54,7 +74,9 @@ void Model::initModel()
 
 void Model::updateModel(float timeValue){
     angle = timeValue * glm::radians(0.1f); // 0.5 grados por segundo
-    modelmat = glm::rotate(modelmat, angle, glm::vec3(0.5f, 1.0f, 0.0f)); // Rotar alrededor de (0.5, 1.0, 0.0)
+    modelmat = glm::rotate(modelmat, angle, glm::vec3(0.0f, 1.0f, 0.0f)); // Rotar alrededor de (0.5, 1.0, 0.0)
+
+
 }
 
 void Model::renderModel(glm::mat4 view, glm::mat4 projection){       
@@ -196,4 +218,3 @@ void Model::draw() {
     glDrawArrays(GL_TRIANGLES, 0, verticesVector.size() / 8);
     glBindVertexArray(0);
 }
-

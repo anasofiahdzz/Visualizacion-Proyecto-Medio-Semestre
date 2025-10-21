@@ -14,13 +14,19 @@ public:
 
     std::vector<float> verticesVector; // Almacena los datos finales para el VBO (pos/color/tex)
 
+    //std::string nombreModelo; // Necesario para la lógica de escalado en updateModel()
+
     //bounding box para el shader de color
     float minY;
     float maxY;
 
     //miembros ya existentes
+    std::string nombreModelo; // <-- NUEVO: Para aplicar la escala correcta
     float angle;
+
     glm::mat4 modelmat;
+    glm::mat4 baseModelmat;  // matriz base con traslación + escala inicial
+    //std::string nombreModelo;
     GLuint VAO, VBO, EBO;
 
     Model();
